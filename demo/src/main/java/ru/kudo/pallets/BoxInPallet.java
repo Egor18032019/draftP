@@ -13,17 +13,18 @@ import java.util.UUID;
 @Setter
 @ToString
 public class BoxInPallet extends Box {
-    int leftX;
-    int rightX;
-    int topY;
-    int bottomY;
+    int xCoord;
+    int zCoord;
+    int yCoord;
 
+    String palletId;
 
-    public BoxInPallet(int width_mm, int height_mm, int length_mm, int weight_kg, int max_load_kg, UUID article_id, int leftX, int rightX, int topY, int bottomY) {
-        super(width_mm, height_mm, length_mm, weight_kg, max_load_kg, article_id);
-        this.leftX = leftX;
-        this.rightX = rightX;
-        this.topY = topY;
-        this.bottomY = bottomY;
+    public BoxInPallet(Box box, String palletId, int xCoord, int zCoord, int yCoord) {
+        super(box);
+        this.xCoord = xCoord;
+        this.zCoord = zCoord;
+        this.yCoord = yCoord;
+
+        this.palletId = palletId;
     }
 }

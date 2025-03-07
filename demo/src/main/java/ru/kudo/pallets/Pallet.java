@@ -55,7 +55,7 @@ class Pallet {
         for (int i = 0; i < levels.size() - 2; i++) {
             LevelArr level = levels.get(i);
             // получаем лвл под текущей коробкой и проверяем нагрузку
-            List<Box> boxes = level.getBoxes();
+            List<BoxInPallet> boxes = level.getBoxes();
             if (boxes.isEmpty()) continue;
             Box prevBox = boxes.get(approximateIndex);
             if (prevBox.getMax_load_kg() - box.getWeight_kg() >= 0) {
@@ -73,7 +73,7 @@ class Pallet {
         // todo убрать текущий уровень
         for (int i = 0; i < levels.size() - 2; i++) {
             LevelArr level = levels.get(i);
-            List<Box> boxes = level.getBoxes();
+            List<BoxInPallet> boxes = level.getBoxes();
             if (boxes.isEmpty()) continue;
             Box prevBox = boxes.get(approximateIndex);
             prevBox.setMax_load_kg(prevBox.getMax_load_kg() - load);

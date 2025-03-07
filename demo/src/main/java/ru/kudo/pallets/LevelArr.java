@@ -14,7 +14,7 @@ import java.util.*;
 @ToString
 public class LevelArr {
     private int[][] levelArr;
-    private List<Box> boxes;
+    private List<BoxInPallet> boxes;
 
     private final int palletWidth;
     private final int palletLength;
@@ -38,22 +38,26 @@ public class LevelArr {
      */
     public void addBox(Box box) {
         System.out.println(box.toString());
-        boxes.add(box);
+
         MaxFreeAreaOnLevel maxFreeAreaOnLevel = getMeUninterruptedFreeArea();
         int currentY = maxFreeAreaOnLevel.getTopY();
         int currentX = maxFreeAreaOnLevel.getLeftX();
         if (box.getWidth_mm() >= maxFreeAreaOnLevel.getWidthUninterrupted() && box.getLength_mm() >= maxFreeAreaOnLevel.getLengthUninterrupted()) {
-             for (int j = currentY; j < currentY + box.getWidth_mm(); j++) {
+            for (int j = currentY; j < currentY + box.getWidth_mm(); j++) {
                 for (int i = currentX; i < currentX + box.getLength_mm(); i++) {
                     levelArr[i][j] = 1;
                 }
             }
+            BoxInPallet boxInPallet = new BoxInPallet(box, "first", currentX, currentY, 0);
+            boxes.add(boxInPallet);
         } else {
             for (int i = currentY; i < currentY + box.getWidth_mm(); i++) {
                 for (int j = currentX; j < currentX + box.getLength_mm(); j++) {
                     levelArr[i][j] = 1;
                 }
             }
+            BoxInPallet boxInPallet = new BoxInPallet(box, "first", currentY, currentX, 0);
+            boxes.add(boxInPallet);
         }
 
         System.out.println("Добавлена коробка: " + box + " на уровне: " + this);

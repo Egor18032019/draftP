@@ -40,6 +40,16 @@ public class Box {
         this.max_load_kg = max_load_kg;
     }
 
+    public Box(Box box) {
+        this.article_id = box.article_id;
+        this.width_mm = box.width_mm;
+        this.length_mm = box.length_mm;
+        this.height_mm = box.height_mm;
+        this.area = box.area;
+        this.weight_kg = box.weight_kg;
+        this.max_load_kg = box.max_load_kg;
+    }
+
     public boolean canSupport(int totalWeightAbove) {
         return totalWeightAbove <= max_load_kg;
     }
