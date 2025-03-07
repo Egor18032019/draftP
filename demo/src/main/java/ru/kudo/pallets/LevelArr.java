@@ -13,15 +13,22 @@ import java.util.*;
 @Setter
 @ToString
 public class LevelArr {
-    private int[][] levelArr;
+    private int[][] occupiedArrMap;
+    private int[][] maxLoadArrMap;
+
     private List<BoxInPallet> boxes;
 
     private final int palletWidth;
     private final int palletLength;
 
-    public LevelArr(int palletWidth, int palletLength) {
-        this.levelArr = new int[palletWidth][palletLength];
-
+    public LevelArr(int palletWidth, int palletLength, int weight_limit_kg) {
+        this.occupiedArrMap = new int[palletWidth][palletLength];
+        this.maxLoadArrMap = new int[palletWidth][palletLength];
+        for (int i = 0; i < palletWidth; i++) {
+            for (int j = 0; j < palletLength; j++) {
+                maxLoadArrMap[i][j] = weight_limit_kg;
+            }
+        }
         this.boxes = new ArrayList<>();
         this.palletWidth = palletWidth;
         this.palletLength = palletLength;
@@ -36,39 +43,44 @@ public class LevelArr {
    [0,0,0,0,0,0,0,0,0],
    ]
      */
-    public void addBox(Box box) {
+    public BoxInPallet addBox(Box box) {
         System.out.println(box.toString());
 
         MaxFreeAreaOnLevel maxFreeAreaOnLevel = getMeUninterruptedFreeArea();
+
         int currentY = maxFreeAreaOnLevel.getTopY();
         int currentX = maxFreeAreaOnLevel.getLeftX();
         if (box.getWidth_mm() >= maxFreeAreaOnLevel.getWidthUninterrupted() && box.getLength_mm() >= maxFreeAreaOnLevel.getLengthUninterrupted()) {
             for (int j = currentY; j < currentY + box.getWidth_mm(); j++) {
                 for (int i = currentX; i < currentX + box.getLength_mm(); i++) {
-                    levelArr[i][j] = 1;
+                    occupiedArrMap[i][j] = 1;
+                    maxLoadArrMap[i][j] = box.getMax_load_kg();
                 }
             }
             BoxInPallet boxInPallet = new BoxInPallet(box, "first", currentX, currentY, 0);
             boxes.add(boxInPallet);
+            System.out.println("Добавлена коробка: " + box + " на уровне: " + this);
+            return boxInPallet;
         } else {
             for (int i = currentY; i < currentY + box.getWidth_mm(); i++) {
                 for (int j = currentX; j < currentX + box.getLength_mm(); j++) {
-                    levelArr[i][j] = 1;
+                    occupiedArrMap[i][j] = 1;
+                    maxLoadArrMap[i][j] = box.getMax_load_kg();
                 }
             }
             BoxInPallet boxInPallet = new BoxInPallet(box, "first", currentY, currentX, 0);
             boxes.add(boxInPallet);
+            System.out.println("Добавлена коробка: " + box + " на уровне: " + this);
+            return boxInPallet;
         }
-
-        System.out.println("Добавлена коробка: " + box + " на уровне: " + this);
     }
 
     public int getCurrentAvailableArea() {
         // посчитать свободное место на уровне
         int availableArea = 0;
-        for (int i = 0; i < levelArr.length; i++) {
-            for (int j = 0; j < levelArr[i].length; j++) {
-                if (levelArr[i][j] == 0) {
+        for (int i = 0; i < occupiedArrMap.length; i++) {
+            for (int j = 0; j < occupiedArrMap[i].length; j++) {
+                if (occupiedArrMap[i][j] == 0) {
                     availableArea++;
                 }
             }
@@ -79,78 +91,66 @@ public class LevelArr {
     //todo необходим рефакторинг(сократить кол-во вызовов + сам алгоритм)
     public MaxFreeAreaOnLevel getMeUninterruptedFreeArea() {
         int maxY = 0;
-        int firstMaxRow = 0;
-        UniqueIndexedList<Integer> y = new UniqueIndexedList<>();
         int maxX = 0;
+
+        UniqueIndexedList<Integer> y = new UniqueIndexedList<>();
         UniqueIndexedList<Integer> x = new UniqueIndexedList<>();
-        int firstMaxColumn = 0;
+
         int uninterruptedX = 0;
         int uninterruptedY = 0;
 
 
 // ищем самую длинную строку в матрице
-        for (int i = 0; i < levelArr.length; i++) {
+        for (int i = 0; i < occupiedArrMap.length; i++) {
             int currentMax = 0;
 
-            for (int j = 0; j < levelArr[i].length; j++) {
-                if (levelArr[i][j] == 0) {
-
+            for (int j = 0; j < occupiedArrMap[i].length; j++) {
+                if (occupiedArrMap[i][j] == 0) {
                     currentMax++;
-
 //                    levelArr[i][j]=2;
                 } else {
 
                     if (currentMax > maxX) {
                         maxX = currentMax;
-
                     }
                     currentMax = 0;
                 }
             }
             if (currentMax > maxX) {
                 maxX = currentMax;
-
             }
         }
         //ищем самую длинную колонку в матрице
-        for (int j = 0; j < levelArr.length; j++) {
+        for (int j = 0; j < occupiedArrMap.length; j++) {
             int currentMax = 0;
-
-            for (int i = 0; i < levelArr[j].length; i++) {
-                if (levelArr[i][j] == 0) {
-
+            for (int i = 0; i < occupiedArrMap[j].length; i++) {
+                if (occupiedArrMap[i][j] == 0) {
                     currentMax++;
-
 //                    levelArr[i][j]=2;
                 } else {
                     if (currentMax > maxY) {
                         maxY = currentMax;
-
                     }
                     currentMax = 0;
-
                 }
             }
             if (currentMax > maxY) {
                 maxY = currentMax;
-
             }
         }
-
 
         MaxFreeAreaOnLevel maxFreeAreaOnLevel;
 
         if (maxX >= maxY) {
 //ищем координаты начала самой длинной строки
             int tempX = 0;
-            for (int i = 0; i < levelArr.length; i++) {
+            for (int i = 0; i < occupiedArrMap.length; i++) {
                 int currentMaxX = 0;
                 boolean flag = true;
                 int beginningLongestX = 0;
-                for (int j = 0; j < levelArr[i].length; j++) {
-                    if (levelArr[i][j] == 0) {
+                for (int j = 0; j < occupiedArrMap[i].length; j++) {
+                    if (occupiedArrMap[i][j] == 0) {
                         currentMaxX++;
-
                         if (flag) {
                             beginningLongestX = j;
                             flag = false;
@@ -158,14 +158,11 @@ public class LevelArr {
                         if (currentMaxX == maxX) {
                             x.add(beginningLongestX);
                             y.add(i);
-
                             tempX++;
                         }
                     } else {
-
                         break;
                     }
-
                 }
                 if (tempX > uninterruptedX) {
                     uninterruptedX = tempX;
@@ -181,15 +178,14 @@ public class LevelArr {
 
         } else {
             System.out.println("!! Напиши функцию для поиска по Y");
-
             int tempY = 0;
             int j = 0;
-            for (; j < levelArr.length; j++) {
+            for (; j < occupiedArrMap.length; j++) {
                 int currentMax = 0;
                 boolean flag = true;
                 int beginningLongestY = 0;
-                for (int i = 0; i < levelArr[j].length; i++) {
-                    if (levelArr[i][j] == 0) {
+                for (int i = 0; i < occupiedArrMap[j].length; i++) {
+                    if (occupiedArrMap[i][j] == 0) {
                         currentMax++;
 //                        levelArr[i][j] =2;
                         if (flag) {
@@ -207,7 +203,6 @@ public class LevelArr {
 
                         break;
                     }
-
                 }
                 if (tempY > uninterruptedY) {
                     uninterruptedY = tempY;
