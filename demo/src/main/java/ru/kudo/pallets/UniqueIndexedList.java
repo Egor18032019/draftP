@@ -17,7 +17,9 @@ public class UniqueIndexedList<T> {
     public Integer get(int index) {
 
         Collections.sort(list);
-
+        if (list.isEmpty()) {
+            return 0;
+        }
 
 
         return list.get(index);

@@ -8,7 +8,14 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class MaxFreeAreaOnLevel {
+    boolean isFound;
+    /**
+     * Максимальная длина свободного пространства
+     */
     int lengthUninterrupted;
+    /**
+     * Максимальная ширина свободного пространства
+     */
     int widthUninterrupted;
 
     int leftX;

@@ -33,11 +33,5 @@ class Level {
     }
 
 
-    public void addBox(Box box) {
-        boxes.add(box);
-        currentAvailableArea = currentAvailableArea - box.getArea();
-        currentY -= box.getWidth_mm();
-        int[] freeSpace = new int[]{palletWidth - box.getWidth_mm(), palletLength - box.getLength_mm()};
-        freeSpaceAfterInstallingBox.add(freeSpace);
-    }
+
 }

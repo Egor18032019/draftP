@@ -99,17 +99,24 @@ class Pallet {
      */
     public MaxFreeAreaOnLevel canPlaceBoxForArea(Box box) {
         int currentAvailableArea = levels.get(currentLevel).getCurrentAvailableArea();
-        if (currentAvailableArea - box.getArea() >= 0) {
 
-            System.out.println("Осталось площадей - " + currentAvailableArea);
-            if (currentAvailableArea >= box.getArea()) {
-                MaxFreeAreaOnLevel freeAreaOnLevel = levels.get(currentLevel).getMeUninterruptedFreeArea();
-                System.out.println("Непрерывная максимальная площадь имеет размер " + freeAreaOnLevel.lengthUninterrupted + " мм и " + freeAreaOnLevel.widthUninterrupted + " мм");
-                if (freeAreaOnLevel.lengthUninterrupted >= box.getLength_mm() && freeAreaOnLevel.widthUninterrupted >= box.getWidth_mm()) {
-                    return freeAreaOnLevel;
-                }
+
+        System.out.println("Осталось площадей - " + currentAvailableArea);
+        if (currentAvailableArea >= box.getArea()) {
+            MaxFreeAreaOnLevel freeAreaOnLevel = levels.get(currentLevel).getMeUninterruptedFreeArea(box);
+            if (freeAreaOnLevel == null) {
+                return null; //todo исправить !!
+            }
+            System.out.println("Непрерывная максимальная площадь имеет размер " + freeAreaOnLevel.lengthUninterrupted + " мм и " + freeAreaOnLevel.widthUninterrupted + " мм");
+            if (freeAreaOnLevel.getLengthUninterrupted() >= box.getLength_mm() && freeAreaOnLevel.getWidthUninterrupted() >= box.getWidth_mm()) {
+                return freeAreaOnLevel;
+            }
+            if (freeAreaOnLevel.getLengthUninterrupted() >= box.getWidth_mm()
+                    && freeAreaOnLevel.getWidthUninterrupted() >= box.getLength_mm()) {
+                return freeAreaOnLevel;
             }
         }
+
         return null;
     }
 
@@ -131,7 +138,7 @@ class Pallet {
 
     public boolean canAddBox(Box box) {
         if (levels.isEmpty()) {
-            LevelArr level = new LevelArr(width, length,weight_limit_kg);
+            LevelArr level = new LevelArr(width, length, weight_limit_kg);
             levels.add(level);
             currentLevelHeight.add(0);
             currentLevel = 0;
@@ -142,8 +149,9 @@ class Pallet {
             return checkingLoad(box, maxFreeAreaOnLevel) && canPlaceBoxForMaximumTotalHeight(box);
         } else {
             System.out.println("Нет места для этой коробки на этом уровне " + box.getArticle_id());
+            return false;
         }
-        return false;
+
     }
 
     public void addBox(Box box) {
@@ -160,7 +168,7 @@ class Pallet {
 
     public void addLevel() {
         currentLevel++;
-        LevelArr level = new LevelArr(width, length,weight_limit_kg);
+        LevelArr level = new LevelArr(width, length, weight_limit_kg);
         levels.add(level);
         currentLevelHeight.add(0);
         System.out.println("Добавлен новый уровень " + currentLevel);

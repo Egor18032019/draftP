@@ -45,14 +45,17 @@ public class LevelArr {
      */
     public BoxInPallet addBox(Box box) {
         System.out.println(box.toString());
+        int[][] draftArrMap = new int[palletWidth][palletLength];
+        MaxFreeAreaOnLevel maxFreeAreaOnLevel = getMeUninterruptedFreeArea(box);
 
-        MaxFreeAreaOnLevel maxFreeAreaOnLevel = getMeUninterruptedFreeArea();
 
-        int currentY = maxFreeAreaOnLevel.getTopY();
-        int currentX = maxFreeAreaOnLevel.getLeftX();
-        if (box.getWidth_mm() >= maxFreeAreaOnLevel.getWidthUninterrupted() && box.getLength_mm() >= maxFreeAreaOnLevel.getLengthUninterrupted()) {
-            for (int j = currentY; j < currentY + box.getWidth_mm(); j++) {
-                for (int i = currentX; i < currentX + box.getLength_mm(); i++) {
+        if (maxFreeAreaOnLevel.getWidthUninterrupted() < maxFreeAreaOnLevel.getLengthUninterrupted()) {
+            int currentY = maxFreeAreaOnLevel.getTopY();
+            int currentX = maxFreeAreaOnLevel.getLeftX();
+            for (int i = currentY; i < currentY + box.getLength_mm(); i++) {
+                for (int j = currentX; j < currentX + box.getWidth_mm(); j++) {
+                    //                    occupiedArrMap[y][x] = 1;
+                    draftArrMap[i][j] = 1;
                     occupiedArrMap[i][j] = 1;
                     maxLoadArrMap[i][j] = box.getMax_load_kg();
                 }
@@ -62,8 +65,12 @@ public class LevelArr {
             System.out.println("Добавлена коробка: " + box + " на уровне: " + this);
             return boxInPallet;
         } else {
+            int currentY = maxFreeAreaOnLevel.getTopY();
+            int currentX = maxFreeAreaOnLevel.getLeftX();
             for (int i = currentY; i < currentY + box.getWidth_mm(); i++) {
                 for (int j = currentX; j < currentX + box.getLength_mm(); j++) {
+//                    occupiedArrMap[y][x] = 1;
+                    draftArrMap[i][j] = 1;
                     occupiedArrMap[i][j] = 1;
                     maxLoadArrMap[i][j] = box.getMax_load_kg();
                 }
@@ -89,133 +96,193 @@ public class LevelArr {
     }
 
     //todo необходим рефакторинг(сократить кол-во вызовов + сам алгоритм)
-    public MaxFreeAreaOnLevel getMeUninterruptedFreeArea() {
+    public MaxFreeAreaOnLevel getMeUninterruptedFreeArea(Box box) {
         int maxY = 0;
         int maxX = 0;
 
         UniqueIndexedList<Integer> y = new UniqueIndexedList<>();
         UniqueIndexedList<Integer> x = new UniqueIndexedList<>();
 
-        int uninterruptedX = 0;
-        int uninterruptedY = 0;
+        int startLongestRowX = 0;
+        int endLongestRowX = 0;
+        int startLongestRowY = 0;
+        int endLongestRowY = 0;
 
 
-// ищем самую длинную строку в матрице
+        int startLongestColumnX1 = 0;
+        int endLongestColumnX2 = 0;
+
+        int startLongestColumnY1 = 0;
+        int endLongestColumnY2 = 0;
+
+// ищем самую длинную строку в матрице + ее координаты
         for (int i = 0; i < occupiedArrMap.length; i++) {
             int currentMax = 0;
-
+            boolean flag = true;
+            int tempLongestX = 0;
+            int tempLongestY = 0;
             for (int j = 0; j < occupiedArrMap[i].length; j++) {
                 if (occupiedArrMap[i][j] == 0) {
                     currentMax++;
 //                    levelArr[i][j]=2;
+                    if (flag) {
+                        tempLongestX = j;
+                        tempLongestY = i;
+                        flag = false;
+                    }
+
                 } else {
 
                     if (currentMax > maxX) {
                         maxX = currentMax;
+                        startLongestRowX = tempLongestX;
+                        startLongestRowY = tempLongestY;
+                    }
+                    if (currentMax == maxX && currentMax != 0) {
+                        endLongestRowX = j;
+                        endLongestRowY = i;
                     }
                     currentMax = 0;
                 }
             }
+
             if (currentMax > maxX) {
                 maxX = currentMax;
+                startLongestRowX = tempLongestX;
+                startLongestRowY = tempLongestY;
+
+                endLongestRowY = occupiedArrMap[i].length - 1;
             }
+            if (currentMax == maxX) {
+                endLongestRowX = i;
+            }
+
         }
-        //ищем самую длинную колонку в матрице
+        //ищем самую длинную колонку в матрице + ее координаты
         for (int j = 0; j < occupiedArrMap.length; j++) {
             int currentMax = 0;
+            int beginningLongestY = 0;
+            int beginningLongestX = 0;
+            boolean flag = true;
             for (int i = 0; i < occupiedArrMap[j].length; i++) {
                 if (occupiedArrMap[i][j] == 0) {
                     currentMax++;
-//                    levelArr[i][j]=2;
+//                    levelArr[y][x]=2;
+
+                    if (flag) {
+                        beginningLongestY = i;
+                        beginningLongestX = j;
+                        flag = false;
+                    }
                 } else {
                     if (currentMax > maxY) {
                         maxY = currentMax;
+                        startLongestColumnX1 = beginningLongestX;
+                        startLongestColumnY1 = beginningLongestY;
+                    }
+                    if (currentMax == maxY && currentMax != 0) { //todo лишнее условие
+                        endLongestColumnX2 = j;
+                        endLongestColumnY2 = i;
                     }
                     currentMax = 0;
                 }
             }
             if (currentMax > maxY) {
                 maxY = currentMax;
+                startLongestColumnX1 = beginningLongestX;
+                startLongestColumnY1 = beginningLongestY;
+                endLongestColumnX2 = occupiedArrMap[j].length - 1;
+            }
+            if (currentMax == maxY) {
+                endLongestColumnY2 = j;
             }
         }
-
+        if (maxX < box.getLength_mm() || maxY < box.getWidth_mm()) {
+            if (maxX < box.getWidth_mm() || maxY < box.getLength_mm()) {
+                System.out.println("Не могу поместить коробку: " + box + " на уровне: " + this);
+                //todo исправить
+                return null;
+            }
+        }
         MaxFreeAreaOnLevel maxFreeAreaOnLevel;
-
-        if (maxX >= maxY) {
+// аксиома ? самая длинная всегда будем проходить через все самые большие участки ?
+        int[][] draftArrMap = new int[palletWidth][palletLength];
+        if (maxX >= maxY && maxX >= box.getLength_mm()) {
+            int needY = box.getWidth_mm();
 //ищем координаты начала самой длинной строки
-            int tempX = 0;
-            for (int i = 0; i < occupiedArrMap.length; i++) {
+            // пройтись по maxX и проверить что по needY все свободно
+            for (int j = startLongestRowX; j <= endLongestRowX; j++) {
                 int currentMaxX = 0;
                 boolean flag = true;
                 int beginningLongestX = 0;
-                for (int j = 0; j < occupiedArrMap[i].length; j++) {
+                for (int i = startLongestRowY; i <= endLongestRowY; i++) {
+                    //occupiedArrMap[y][x]
+
                     if (occupiedArrMap[i][j] == 0) {
+                        draftArrMap[i][j] = 2;
                         currentMaxX++;
                         if (flag) {
-                            beginningLongestX = j;
+                            beginningLongestX = i;
                             flag = false;
                         }
-                        if (currentMaxX == maxX) {
-                            x.add(beginningLongestX);
+                        if (currentMaxX == needY) {
+                            y.add(beginningLongestX);
+                            x.add(j);
                             y.add(i);
-                            tempX++;
+
                         }
                     } else {
                         break;
                     }
                 }
-                if (tempX > uninterruptedX) {
-                    uninterruptedX = tempX;
-                } else {
-                    tempX = 0;
-                }
+
             }
+
             int leftX = x.get(0);
             int topY = y.get(0);
             int rightX = x.get(x.size() - 1);
             int bottomY = y.get(y.size() - 1);
-            maxFreeAreaOnLevel = new MaxFreeAreaOnLevel(maxX, uninterruptedX, leftX, rightX, topY, bottomY);
+            maxFreeAreaOnLevel = new MaxFreeAreaOnLevel(x.size() > 0, maxX, maxY, leftX, rightX, topY, bottomY);
 
         } else {
             System.out.println("!! Напиши функцию для поиска по Y");
-            int tempY = 0;
-            int j = 0;
-            for (; j < occupiedArrMap.length; j++) {
+
+            int needX = box.getWidth_mm();
+
+
+            for (int i = startLongestColumnY1; i <= endLongestColumnY2; i++) {
                 int currentMax = 0;
                 boolean flag = true;
                 int beginningLongestY = 0;
-                for (int i = 0; i < occupiedArrMap[j].length; i++) {
+                for (int j = startLongestColumnX1; j <= endLongestColumnX2; j++) {
+                    //occupiedArrMap[y][x]
                     if (occupiedArrMap[i][j] == 0) {
                         currentMax++;
-//                        levelArr[i][j] =2;
+                        draftArrMap[i][j] = 2;
                         if (flag) {
-                            beginningLongestY = i;
+                            beginningLongestY = j;
                             flag = false;
                         }
-                        if (currentMax == maxY) {
-                            y.add(beginningLongestY);
+                        if (currentMax == needX) {
+                            x.add(beginningLongestY);
                             y.add(i);
                             x.add(j);
 
-                            tempY++;
+
                         }
                     } else {
 
                         break;
                     }
                 }
-                if (tempY > uninterruptedY) {
-                    uninterruptedY = tempY;
-                } else {
-                    tempY = 0;
-                }
+
             }
             int leftX = x.get(0);
             int rightX = x.get(x.size() - 1);
             int topY = y.get(0);
             int bottomY = y.get(y.size() - 1);
 
-            maxFreeAreaOnLevel = new MaxFreeAreaOnLevel(maxY, uninterruptedY, leftX, rightX, topY, bottomY);
+            maxFreeAreaOnLevel = new MaxFreeAreaOnLevel(x.size() > 0, maxY, maxX, leftX, rightX, topY, bottomY);
 
 
         }
