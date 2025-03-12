@@ -50,7 +50,7 @@ java . есть двумерный массив чисел . Например   
     public BoxInPallet addBox(Box box) {
         System.out.println(box.toString());
         int[][] draftArrMap = new int[palletWidth][palletLength];
-        Rectangl maxFreeAreaOnLevel = findRectangles(occupiedArrMap, box.getLength_mm(), box.getWidth_mm(),heightArrMap);
+        Rectangl maxFreeAreaOnLevel = findRectangles(occupiedArrMap, box.getLength_mm(), box.getWidth_mm(), heightArrMap);
         int widthUninterrupted = maxFreeAreaOnLevel.getRightX() - maxFreeAreaOnLevel.getLeftX();
         int lengthUninterrupted = maxFreeAreaOnLevel.getBottomY() - maxFreeAreaOnLevel.getTopY();
 
@@ -65,11 +65,11 @@ java . есть двумерный массив чисел . Например   
                     draftArrMap[i][j] = 1;
                     occupiedArrMap[i][j] = 1;
                     heightArrMap[i][j] = box.getHeight_mm();
-                    maxLoadArrMap[i][j] = box.getMax_load_kg();
+                    maxLoadArrMap[i][j] = box.getMax_load_kg();//todo сделать нулевой уровень паллеты ?
                 }
             }
 
-            BoxInPallet boxInPallet = new BoxInPallet(box, "first", currentX, currentY, 0);
+            BoxInPallet boxInPallet = new BoxInPallet(box, "first", currentX, currentY, heightArrMap[currentY][currentX]);
             boxes.add(boxInPallet);
             System.out.println("Добавлена коробка: " + box + " на уровне: " + this);
             return boxInPallet;
@@ -81,12 +81,13 @@ java . есть двумерный массив чисел . Например   
 //                    occupiedArrMap[y][x] = 1;
                     draftArrMap[i][j] = 1;
                     occupiedArrMap[i][j] = 1;
+                    heightArrMap[i][j] = box.getHeight_mm();
                     maxLoadArrMap[i][j] = box.getMax_load_kg();
                 }
             }
             //повернули коробку
             box.rotate90();
-            BoxInPallet boxInPallet = new BoxInPallet(box, "first", currentY, currentX, 0);
+            BoxInPallet boxInPallet = new BoxInPallet(box, "first", currentY, currentX, heightArrMap[currentY][currentX]);
             boxes.add(boxInPallet);
             System.out.println("Добавлена коробка: " + box + " на уровне: " + this);
             return boxInPallet;
@@ -303,8 +304,8 @@ java . есть двумерный массив чисел . Например   
     }
 
     //todo необходим рефакторинг(сократить кол-во вызовов + сам алгоритм)
-    public Rectangl findRectangles(int[][] array, int length_mm, int width_mm,int[][] arrayHeight) {
-     // поиск прямоугольников в матрице с учетом одинаковой высоты и ширины
+    public Rectangl findRectangles(int[][] array, int length_mm, int width_mm, int[][] arrayHeight) {
+        // поиск прямоугольников в матрице с учетом одинаковой высоты и ширины
 
         List<Rectangl> rectangles = new ArrayList<>();
         int rows = array.length;
@@ -313,7 +314,7 @@ java . есть двумерный массив чисел . Например   
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 int currentHeight = array[i][j];
-                boolean isFreeArea = array[i][j]!= 0;
+                boolean isFreeArea = array[i][j] != 0;
 //                occupiedArrMap[y][x] = 1;
                 if (isFreeArea) {
                     //todo как то по другому бы

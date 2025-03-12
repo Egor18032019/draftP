@@ -41,7 +41,7 @@ class Pallet {
 
 
     /**
-     * проверка на максимальный вес
+     * Проверка на максимальный нагрузку
      *
      * @param box коробка, которую хотим положить на этот уровень
      * @return true, если можем положить эту коробку на этот уровень
@@ -49,7 +49,7 @@ class Pallet {
     public boolean checkingLoad(Box box, Rectangl maxFreeAreaOnLevel) {
         if (weight_limit_kg - box.getWeight_kg() < 0) return false;
         if (levels.size() == 1) return true; // если первый уровень
-        int max_load_kg = box.getMax_load_kg();
+        int weightThisBox = box.getWeight_kg();
         int currentY = maxFreeAreaOnLevel.getTopY();
         int currentX = maxFreeAreaOnLevel.getLeftX();
         int widthUninterrupted = maxFreeAreaOnLevel.getRightX() - maxFreeAreaOnLevel.getLeftX();
@@ -59,7 +59,7 @@ class Pallet {
             if (box.getWidth_mm() >= widthUninterrupted && box.getLength_mm() >= lengthUninterrupted) {
                 for (int j = currentY; j < currentY + box.getWidth_mm(); j++) {
                     for (int i = currentX; i < currentX + box.getLength_mm(); i++) {
-                        if (prevMaxLoadArrMap[j][i] <= max_load_kg) {
+                        if (prevMaxLoadArrMap[j][i] - weightThisBox < 0) {
                             return false;
                         }
                     }
@@ -67,7 +67,7 @@ class Pallet {
             } else {
                 for (int i = currentY; i < currentY + box.getWidth_mm(); i++) {
                     for (int j = currentX; j < currentX + box.getLength_mm(); j++) {
-                        if (prevMaxLoadArrMap[j][i] <= max_load_kg) {
+                        if (prevMaxLoadArrMap[j][i] - weightThisBox < 0) {
                             return false;
                         }
                     }
@@ -80,13 +80,15 @@ class Pallet {
 
     public void currentLoad(BoxInPallet box) {
         if (levels.size() == 1) return; // если первый уровень
-        //todo  проходим по нижним уровням и уменьшаем максимальный вес нагрузки
+        //   проходим по нижним уровням и уменьшаем максимальный вес нагрузки
+
+//todo сделать правильное заполнение
         for (int z = 0; z < currentLevel; z++) {
             int[][] prevMaxLoadArrMap = levels.get(z).getMaxLoadArrMap();
-            for (int j = box.yCoord; j < box.yCoord + box.getWidth_mm(); j++) {
-                for (int i = box.xCoord; i < box.yCoord + box.getLength_mm(); i++) {
+            for (int j = box.getZCoord(); j < box.getZCoord() + box.getWidth_mm(); j++) {
+                for (int i = box.getXCoord(); i < box.getXCoord() + box.getLength_mm(); i++) {
                     prevMaxLoadArrMap[j][i] = prevMaxLoadArrMap[j][i] - box.getWeight_kg();
-
+                 // prevMaxLoadArrMap[z][x]
                 }
             }
         }
@@ -106,9 +108,9 @@ class Pallet {
         if (currentAvailableArea >= box.getArea()) {
 
             Rectangl freeAreaOnLevel = levels.get(currentLevel).findRectangles(levels.get(currentLevel).getOccupiedArrMap(), box.getLength_mm(), box.getWidth_mm(), levels.get(currentLevel).getHeightArrMap());
-            if (  !freeAreaOnLevel.isExists) {
+            if (!freeAreaOnLevel.isExists) {
                 return null; //todo исправить !!
-            }else {
+            } else {
                 return freeAreaOnLevel;
             }
         }
@@ -124,13 +126,13 @@ class Pallet {
      */
     public boolean canPlaceBoxForMaximumTotalHeight(Box box) {
         int remainderMaxHeight = currentHeightPallet + box.getHeight_mm();
-        return maximumTotalHeight - remainderMaxHeight >= 0;
+        if (maximumTotalHeight - remainderMaxHeight < 0) {
+            System.out.println("Высота коробки меньше оставшейся высоты");
+        }
+        return maximumTotalHeight - remainderMaxHeight > 0;
     }
 
-    public boolean canPlaceBoxForContinuousHeight(Box box) {
 
-        return true;
-    }
 
     public boolean canAddBox(Box box) {
         if (levels.isEmpty()) {
@@ -163,11 +165,18 @@ class Pallet {
     }
 
     public void addLevel() {
-        currentLevel++;
-        LevelArr level = new LevelArr(width, length, weight_limit_kg);
-        levels.add(level);
-        currentLevelHeight.add(0);
-        System.out.println("Добавлен новый уровень " + currentLevel);
+        if (levels.isEmpty()) {
+            LevelArr level = new LevelArr(width, length, weight_limit_kg);
+            levels.add(level);
+            currentLevelHeight.add(0);
+            currentLevel = 0;
+        } else {
+            currentLevel++;
+            LevelArr level = new LevelArr(width, length, weight_limit_kg);
+            levels.add(level);
+            currentLevelHeight.add(0);
+            System.out.println("Добавлен новый уровень " + currentLevel);
+        }
     }
 }
 

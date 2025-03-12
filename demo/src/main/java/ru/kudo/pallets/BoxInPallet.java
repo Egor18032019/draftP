@@ -13,9 +13,9 @@ import java.util.UUID;
 @Setter
 @ToString
 public class BoxInPallet extends Box {
-    int xCoord;
-    int zCoord;
-    int yCoord;
+   private int xCoord;
+    private int zCoord;
+    private int yCoord;
 
     String palletId;
 

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 
 public class FCNRAlgorithm {
-    static Pallet pallet = new Pallet(9, 9, 9, 50, 50);
 
     public static void main(String[] args) {
         List<Box> boxes = new ArrayList<>();
@@ -15,12 +14,17 @@ public class FCNRAlgorithm {
         boxes.add(new Box(3, 3, 7, 9, 8, new UUID(3, 22)));   // Вес 4, максимальная нагрузка 8
         boxes.add(new Box(4, 4, 6, 10, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
         boxes.add(new Box(2, 4, 6, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
+        boxes.add(new Box(5, 4, 5, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
+        boxes.add(new Box(5, 4, 5, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
+        boxes.add(new Box(5, 4, 5, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
 
 
-        stackingAlgorithm(boxes, pallet);
+        stackingAlgorithm(boxes);
     }
 
-    public static void stackingAlgorithm(List<Box> order, Pallet pallet) {
+    public static void stackingAlgorithm(List<Box> order) {
+        List<Pallet> neededPallets = new ArrayList<>();
+        Pallet pallet = new Pallet(9, 9, 9, 50, 180);
 
         // сортируем по весу и длине ? или только по весу ?? или + нагрузке ?
 //        order.sort(Comparator.comparingInt(b -> -b.getWeight_kg()));
@@ -32,35 +36,39 @@ public class FCNRAlgorithm {
 
         while (!sortedList.isEmpty()) {
             for (Box box : order) {
-                if(box.getLength_mm()==6&&box.getWidth_mm()==2){
-                    System.out.println("!!!");
-                }
+
                 // Пробуем разместить коробку на паллете
-                if (canFitOnPalletOnThisLevel(box)) {
+                if (canFitOnPalletOnThisLevel(box, pallet)) {
                     pallet.addBox(box);
                     sortedList.remove(box);
                 }
             }
             // делаем новый уровень коробок
             // как сделать выход и не создавать новые пустые уровни??
-            if (!pallet.getLevels().get(pallet.getCurrentLevel()).getBoxes().isEmpty()) {
-                pallet.addLevel();
-                order = new ArrayList<>(sortedList);
-            } else {
-                // переходим к оставшимся площадям после установки всех коробок на уровне ранее
-                System.out.println(order);
+            if (pallet.getLevels().get(pallet.getCurrentLevel()).getBoxes().isEmpty()) {
+                System.out.println("Необходим новый паллет.");
+                System.out.println("Осталось " + sortedList.size() + " коробок.");
+                pallet.getLevels().remove(pallet.getCurrentLevel());
+                neededPallets.add(pallet);
+                pallet = new Pallet(9, 9, 9, 50, 55);
 
             }
+            pallet.addLevel();
+            order = new ArrayList<>(sortedList);
+
 
         }
-
-
-        System.out.println("Remaining height on the pallet: " + pallet.getCurrentHeightPallet());
-        System.out.println(pallet.getWeight_limit_kg() + " - оставшийся вес палеты.");
+        if (pallet.getLevels().get(pallet.getCurrentLevel()).getBoxes().isEmpty()) {
+            pallet.getLevels().remove(pallet.getCurrentLevel());
+        }
+        neededPallets.add(pallet);
+        System.out.println("Все коробки размещены на паллетах.");
+        System.out.println("Количество паллет: " + neededPallets.size());
+        System.out.println(neededPallets);
     }
 
 
-    public static boolean canFitOnPalletOnThisLevel(Box box) {
+    public static boolean canFitOnPalletOnThisLevel(Box box, Pallet pallet) {
         boolean result = pallet.canAddBox(box);
 
         return result;
@@ -69,15 +77,3 @@ public class FCNRAlgorithm {
 }
 
 
-
-        /*
-       Производится предварительная сортировка по объему, чтобы размещать более крупные коробки первыми.
-       Самая объемная коробка устанавливается в левый ближний угол,
-       Потом идет сортировка коробок по весу и максимальной нагрузке. = arr1
-       И последовательно заполняем первый уровень паллеты с arr1.
-       Далее повторяем.
-       То есть сортируем по объему и пытаемся разместить самую объемную коробку в левый ближний угол.
-            (проверка по максимальной высоте и нагрузке)
-       И если это не получается, то перебираем по весу и максимальной нагрузке и высоте ? (рекурсия?)
-и так далее.
-         */
