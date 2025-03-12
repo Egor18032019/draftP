@@ -46,16 +46,17 @@ class Pallet {
      * @param box коробка, которую хотим положить на этот уровень
      * @return true, если можем положить эту коробку на этот уровень
      */
-    public boolean checkingLoad(Box box, MaxFreeAreaOnLevel maxFreeAreaOnLevel) {
+    public boolean checkingLoad(Box box, Rectangl maxFreeAreaOnLevel) {
         if (weight_limit_kg - box.getWeight_kg() < 0) return false;
         if (levels.size() == 1) return true; // если первый уровень
         int max_load_kg = box.getMax_load_kg();
         int currentY = maxFreeAreaOnLevel.getTopY();
         int currentX = maxFreeAreaOnLevel.getLeftX();
-
+        int widthUninterrupted = maxFreeAreaOnLevel.getRightX() - maxFreeAreaOnLevel.getLeftX();
+        int lengthUninterrupted = maxFreeAreaOnLevel.getBottomY() - maxFreeAreaOnLevel.getTopY();
         for (int z = 0; z < (currentLevel - 1); z++) {
             int[][] prevMaxLoadArrMap = levels.get(z).getMaxLoadArrMap();
-            if (box.getWidth_mm() >= maxFreeAreaOnLevel.getWidthUninterrupted() && box.getLength_mm() >= maxFreeAreaOnLevel.getLengthUninterrupted()) {
+            if (box.getWidth_mm() >= widthUninterrupted && box.getLength_mm() >= lengthUninterrupted) {
                 for (int j = currentY; j < currentY + box.getWidth_mm(); j++) {
                     for (int i = currentX; i < currentX + box.getLength_mm(); i++) {
                         if (prevMaxLoadArrMap[j][i] <= max_load_kg) {
@@ -97,27 +98,22 @@ class Pallet {
      * @param box коробка, которую хотим положить на этот уровень
      * @return true, если можем положить эту коробку на этот уровень
      */
-    public MaxFreeAreaOnLevel canPlaceBoxForArea(Box box) {
+    public Rectangl canPlaceBoxForArea(Box box) {
         int currentAvailableArea = levels.get(currentLevel).getCurrentAvailableArea();
 
 
         System.out.println("Осталось площадей - " + currentAvailableArea);
         if (currentAvailableArea >= box.getArea()) {
-            MaxFreeAreaOnLevel freeAreaOnLevel = levels.get(currentLevel).getMeUninterruptedFreeArea(box);
-            if (freeAreaOnLevel == null) {
+
+            Rectangl freeAreaOnLevel = levels.get(currentLevel).findRectangles(levels.get(currentLevel).getOccupiedArrMap(), box.getLength_mm(), box.getWidth_mm(), levels.get(currentLevel).getHeightArrMap());
+            if (  !freeAreaOnLevel.isExists) {
                 return null; //todo исправить !!
-            }
-            System.out.println("Непрерывная максимальная площадь имеет размер " + freeAreaOnLevel.lengthUninterrupted + " мм и " + freeAreaOnLevel.widthUninterrupted + " мм");
-            if (freeAreaOnLevel.getLengthUninterrupted() >= box.getLength_mm() && freeAreaOnLevel.getWidthUninterrupted() >= box.getWidth_mm()) {
-                return freeAreaOnLevel;
-            }
-            if (freeAreaOnLevel.getLengthUninterrupted() >= box.getWidth_mm()
-                    && freeAreaOnLevel.getWidthUninterrupted() >= box.getLength_mm()) {
+            }else {
                 return freeAreaOnLevel;
             }
         }
 
-        return null;
+        return null;//todo исправить !!
     }
 
     /**
@@ -144,7 +140,7 @@ class Pallet {
             currentLevel = 0;
 
         }
-        MaxFreeAreaOnLevel maxFreeAreaOnLevel = canPlaceBoxForArea(box);
+        Rectangl maxFreeAreaOnLevel = canPlaceBoxForArea(box);
         if (maxFreeAreaOnLevel != null) {
             return checkingLoad(box, maxFreeAreaOnLevel) && canPlaceBoxForMaximumTotalHeight(box);
         } else {

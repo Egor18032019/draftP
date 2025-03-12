@@ -23,8 +23,8 @@ public class FCNRAlgorithm {
     public static void stackingAlgorithm(List<Box> order, Pallet pallet) {
 
         // сортируем по весу и длине ? или только по весу ?? или + нагрузке ?
-        order.sort(Comparator.comparingInt(b -> -b.getWeight_kg()));
-//        order.sort(Comparator.comparingInt(Box::getLength_mm).thenComparingInt(Box::getWeight_kg));
+//        order.sort(Comparator.comparingInt(b -> -b.getWeight_kg()));
+        order.sort(Comparator.comparingInt(Box::getWeight_kg).reversed().thenComparingInt(Box::getHeight_mm));
 
 
         // Создаем новую копию исходного списка

@@ -53,6 +53,12 @@ public class Box {
     public boolean canSupport(int totalWeightAbove) {
         return totalWeightAbove <= max_load_kg;
     }
+
+    public void rotate90() {
+        int temp = length_mm;
+        length_mm = width_mm;
+        width_mm = temp;
+    }
 }
 /*
  article_id: уникальный идентификатор артикула,
