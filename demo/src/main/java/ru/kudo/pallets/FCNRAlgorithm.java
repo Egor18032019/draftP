@@ -8,34 +8,35 @@ import java.util.UUID;
 public class FCNRAlgorithm {
 
     public static void main(String[] args) {
-        List<Box> boxes = new ArrayList<>();
-        boxes.add(new Box(2, 3, 9, 5, 10, new UUID(1, 22))); // Вес 5, максимальная нагрузка 10
-        boxes.add(new Box(1, 2, 8, 2, 5, new UUID(2, 22)));   // Вес 2, максимальная нагрузка 5
-        boxes.add(new Box(3, 3, 7, 9, 8, new UUID(3, 22)));   // Вес 4, максимальная нагрузка 8
-        boxes.add(new Box(4, 4, 6, 10, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
-        boxes.add(new Box(2, 4, 6, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
-        boxes.add(new Box(5, 4, 5, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
-        boxes.add(new Box(5, 4, 5, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
-        boxes.add(new Box(5, 4, 5, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
-
-
-        stackingAlgorithm(boxes);
+//        List<Box> boxes = new ArrayList<>();
+//        boxes.add(new Box(2, 3, 9, 5, 10, new UUID(1, 22))); // Вес 5, максимальная нагрузка 10
+//        boxes.add(new Box(1, 2, 8, 2, 5, new UUID(2, 22)));   // Вес 2, максимальная нагрузка 5
+//        boxes.add(new Box(3, 3, 7, 9, 8, new UUID(3, 22)));   // Вес 4, максимальная нагрузка 8
+//        boxes.add(new Box(4, 4, 6, 10, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
+//        boxes.add(new Box(2, 4, 6, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
+//        boxes.add(new Box(5, 4, 5, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
+//        boxes.add(new Box(5, 4, 5, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
+//        boxes.add(new Box(5, 4, 5, 1, 15, new UUID(4, 22))); // Вес 10, максимальная нагрузка 15
+//        Order order = new Order(boxes);
+//
+//        stackingAlgorithm(order.getBoxes());
     }
 
-    public static void stackingAlgorithm(List<Box> order) {
+    public static List<Pallet> stackingAlgorithm(Order order) {
+        List<Box> boxList = order.getBoxes();
         List<Pallet> neededPallets = new ArrayList<>();
-        Pallet pallet = new Pallet(9, 9, 9, 50, 180);
+        Pallet pallet = new Pallet(order.getOrderGuid(), 9, 9, 9, 50, 180);
 
         // сортируем по весу и длине ? или только по весу ?? или + нагрузке ?
-//        order.sort(Comparator.comparingInt(b -> -b.getWeight_kg()));
-        order.sort(Comparator.comparingInt(Box::getWeight_kg).reversed().thenComparingInt(Box::getHeight_mm));
+//        boxList.sort(Comparator.comparingInt(b -> -b.getWeight_kg()));
+        boxList.sort(Comparator.comparingInt(Box::getWeight_kg).reversed().thenComparingInt(Box::getHeight_mm));
 
 
         // Создаем новую копию исходного списка
-        List<Box> sortedList = new ArrayList<>(order);
+        List<Box> sortedList = new ArrayList<>(boxList);
 
         while (!sortedList.isEmpty()) {
-            for (Box box : order) {
+            for (Box box : boxList) {
 
                 // Пробуем разместить коробку на паллете
                 if (canFitOnPalletOnThisLevel(box, pallet)) {
@@ -50,11 +51,11 @@ public class FCNRAlgorithm {
                 System.out.println("Осталось " + sortedList.size() + " коробок.");
                 pallet.getLevels().remove(pallet.getCurrentLevel());
                 neededPallets.add(pallet);
-                pallet = new Pallet(9, 9, 9, 50, 55);
+                pallet = new Pallet(order.getOrderGuid(),9, 9, 9, 50, 55);
 
             }
             pallet.addLevel();
-            order = new ArrayList<>(sortedList);
+            boxList = new ArrayList<>(sortedList);
 
 
         }
@@ -65,6 +66,7 @@ public class FCNRAlgorithm {
         System.out.println("Все коробки размещены на паллетах.");
         System.out.println("Количество паллет: " + neededPallets.size());
         System.out.println(neededPallets);
+        return neededPallets;
     }
 
 

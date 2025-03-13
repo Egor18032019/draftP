@@ -2,6 +2,7 @@ package ru.kudo.pallets;
 
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -13,8 +14,10 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class Box {
     private UUID article_id;
+
     private int width_mm, height_mm, length_mm; // габариты коробки (в миллиметрах),
     /**
      * Объем коробки в кубических миллиметрах

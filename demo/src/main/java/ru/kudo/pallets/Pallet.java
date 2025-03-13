@@ -6,13 +6,17 @@ import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 @ToString
-class Pallet {
-    int width, length, height;
-    int weight_limit_kg = Integer.MAX_VALUE;
+public class Pallet {
+    private UUID palletId;
+    private UUID orderGuid;
+
+    private int width, length, height;
+    private int weight_limit_kg = Integer.MAX_VALUE;
 
     private List<LevelArr> levels = new ArrayList<>();
     private List<Integer> currentLevelHeight = new ArrayList<>();
@@ -24,13 +28,17 @@ class Pallet {
 
 
     public Pallet(int width, int length, int height) {
+
+        this.palletId = UUID.randomUUID();
         this.width = width;
         this.length = length;
         this.height = height;
     }
 
     //    Ограничения по максимальному весу паллеты (если есть).
-    public Pallet(int width, int length, int height, int weight_limit_kg, int maximumTotalHeight) {
+    public Pallet(UUID orderGuid,int width, int length, int height, int weight_limit_kg, int maximumTotalHeight) {
+        this.palletId = UUID.randomUUID();
+        this.orderGuid = orderGuid;
         this.width = width;
         this.length = length;
         this.height = height;
@@ -88,7 +96,7 @@ class Pallet {
             for (int j = box.getZCoord(); j < box.getZCoord() + box.getWidth_mm(); j++) {
                 for (int i = box.getXCoord(); i < box.getXCoord() + box.getLength_mm(); i++) {
                     prevMaxLoadArrMap[j][i] = prevMaxLoadArrMap[j][i] - box.getWeight_kg();
-                 // prevMaxLoadArrMap[z][x]
+                    // prevMaxLoadArrMap[z][x]
                 }
             }
         }
@@ -133,10 +141,9 @@ class Pallet {
     }
 
 
-
     public boolean canAddBox(Box box) {
         if (levels.isEmpty()) {
-            LevelArr level = new LevelArr(width, length, weight_limit_kg);
+            LevelArr level = new LevelArr(palletId,width, length, weight_limit_kg);
             levels.add(level);
             currentLevelHeight.add(0);
             currentLevel = 0;
@@ -166,13 +173,13 @@ class Pallet {
 
     public void addLevel() {
         if (levels.isEmpty()) {
-            LevelArr level = new LevelArr(width, length, weight_limit_kg);
+            LevelArr level = new LevelArr(palletId,width, length, weight_limit_kg);
             levels.add(level);
             currentLevelHeight.add(0);
             currentLevel = 0;
         } else {
             currentLevel++;
-            LevelArr level = new LevelArr(width, length, weight_limit_kg);
+            LevelArr level = new LevelArr(palletId,width, length, weight_limit_kg);
             levels.add(level);
             currentLevelHeight.add(0);
             System.out.println("Добавлен новый уровень " + currentLevel);
